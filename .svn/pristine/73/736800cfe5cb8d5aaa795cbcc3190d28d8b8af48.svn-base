@@ -1,0 +1,239 @@
+package ${path}.${foldName};
+
+import java.util.Date;
+import org.apache.commons.lang.StringUtils;
+import com.gwall.biz.IGVouchBiz;
+import com.gwall.core.GVouchBase;
+import com.gwall.util.SimpleDateUtils;
+
+public class ${ClassName}MB extends GVouchBase {
+
+    /* table ${ClassName} */
+    public static final String MODULE = "${ClassNameUpper}";
+
+    /* 创建BEAN */
+    private ${ClassName}MBean mbean = new ${ClassName}MBean();
+
+    private ${ClassName}DBean dbean = new ${ClassName}DBean();
+
+    private ${ClassName}Dao ${foldName}Dao;
+    /* 初始化权限 */
+    public ${ClassName}MB() {
+        this.regModule(this.MODULE);
+        this.setSk_obj(new ${ClassName}MBean());
+        ${foldName}Dao=new ${ClassName}Dao();
+    }
+
+    private String updatedata; // 更新明细
+
+	/**
+     * Description 初始化查询条件
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-06
+     */
+    public void initSK() {
+        this.initSearchKey(new ${ClassName}MBean());
+    }
+
+    /**
+     * Description 获得单据信息
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void getVouch() {
+        boolean bool = "ok".equals(${foldName}Dao.getVouch(mbean));
+        if (bool) {
+            if (Integer.parseInt(this.mbean.getFlag()==null?"0":this.mbean.getFlag()) < 11) {
+                this.commitStatus = true;
+            } else {
+                this.commitStatus = false;
+            }
+        }
+    }
+
+    /**
+     * Description 页面查询
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-30
+     */
+    public void search() {
+        this.searchSQL = "";
+        if (this.sk_start_date != null
+                && this.sk_start_date.trim().length() > 0) {
+            this.searchSQL += " and a.crdt >= to_date('"+this.sk_start_date.trim() + "','yyyy-mm-dd HH24:mi')";
+        }
+        if (this.sk_end_date != null && this.sk_end_date.trim().length() > 0) {
+            this.searchSQL += " and a.crdt <= to_date('"+this.sk_end_date.trim() + "','yyyy-mm-dd HH24:mi')";
+        }
+        if (((${ClassName}MBean) this.sk_obj).getFlag() != null
+                && !((${ClassName}MBean) this.sk_obj).getFlag().equals("00")) {
+            this.searchSQL += " and a.flag = '"
+                    + ((${ClassName}MBean) this.sk_obj).getFlag().trim() + "'";
+        }
+        if (!StringUtils.isBlank(orid)) {
+        	this.searchSQL += " and a.orid in   (select orid from table(f_getgroupinfo('" + this.orid.trim() + "',2)))";
+        }
+    }
+    /**
+     * Description 添加单据
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-09-01
+     */
+    public void addHead() {
+        msg = this.${foldName}Dao.addHead(mbean);
+    }
+
+    /**
+     * Description 删除单据
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void deleteHead() {
+        this.msg = this.${foldName}Dao.deleteHead(this.sellist);
+
+    }
+
+    /**
+     * Description 修改单据主表
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void updateHead() {
+        this.msg = this.${foldName}Dao.updateHead(mbean);
+    }
+    
+    /**
+     * Description 审核单据
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void approveVouch() {
+        this.msg = this.${foldName}Dao.approveVouch(this.mbean);
+    }
+
+    /**
+     * Description 反审单据
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-09-06
+     */
+    public void unApproveVouch() {
+        this.msg = this.${foldName}Dao.unApproveVouch(this.mbean);
+    }
+
+    /**
+     * Description 打印单据
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void printVouch() {
+
+    }
+
+    /**
+     * Description 添加明细
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void addDetail() {
+        this.msg = this.${foldName}Dao.addDetail(mbean, dbean);
+    }
+
+    /**
+     * Description 删除明细
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void deleteDetail() {
+        this.msg = this.${foldName}Dao.deleteDetail(this.mbean, this.sellist);
+    }
+
+    /**
+     * Description 修改明细
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public void updateDetail() {
+        this.msg = this.${foldName}Dao.updateDetail(
+                this.updatedata);
+    }
+
+    public void addDetails() {
+        this.msg = this.${foldName}Dao.addDetail(mbean, this.sellist.replace("#@#",
+                ","));
+    }
+
+    public ${ClassName}MBean getMbean() {
+        return mbean;
+    }
+
+    public void setMbean(${ClassName}MBean mbean) {
+        this.mbean = mbean;
+    }
+
+    public ${ClassName}DBean getDbean() {
+        return dbean;
+    }
+
+    public void setDbean(${ClassName}DBean dbean) {
+        this.dbean = dbean;
+    }
+
+    public String getUpdatedata() {
+        return updatedata;
+    }
+
+    public void setUpdatedata(String updatedata) {
+        this.updatedata = updatedata;
+    }
+
+    public static String getMODULE() {
+        return MODULE;
+    }
+
+    @Override
+    public IGVouchBiz getVouchBiz() {
+        return null;
+    }
+
+	@Override
+	public void printCode() {
+		// TODO Auto-generated method stub
+		
+	}
+}

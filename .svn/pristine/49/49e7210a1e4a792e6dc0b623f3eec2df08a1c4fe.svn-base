@@ -1,0 +1,224 @@
+<%@ page language="java" pageEncoding="UTF-8"%>
+<%@ include file="../../../../include/include_imp.jsp"%>
+<%@ page import="${path}.${foldName}.${ClassName }MB"%>
+
+<%
+	String id = "";
+${ClassName }MB ai = (${ClassName }MB) MBUtil.getManageBean("${r"#{"}${foldName}MB${r"}"}");
+	if (request.getParameter("pid") != null) {
+		id = request.getParameter("pid");
+		ai.getMbean().setBiid(id);
+	}
+	ai.getVouch();
+%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>${modunote}</title>
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="cache-control" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="keywords" content="${modunote}">
+		<meta http-equiv="description" content="${modunote}">
+		<script type="text/javascript" src="${foldName }.js"></script>
+		<style type="text/css">
+			.gopt span {
+				cursor: pointer;
+				color: #0000FF;
+			}
+		</style>
+	</head>
+
+	<f:view>
+	<body id="mmain_body" onload="initEdit();">
+		<div id="mmain_nav">
+			<font color="#000000">${pmodunote}&gt;&gt;<a href="list.jsf"
+				class="return" title="返回">单据列表</a>&gt;&gt;</font><b>编辑${modunote}</b>
+			<br>
+		</div>		
+			<h:form id="edit">
+				<div id="mmain">
+					<div id=mmain_opt>
+						<a4j:outputPanel id="showHeadButton">
+							<a4j:commandButton value="添加单据"
+								onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+								onclick="addNew();" rendered="${r"#{"}${foldName}MB.ADD${r"}"}" />
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+								id="updateId" value="保存单据" type="button"
+								action="${r"#{"}${foldName}MB.updateHead${r"}"}"
+								onclick="if(!updateHead()){return false};"
+								reRender="output,renderArea,head" requestDelay="50"
+								rendered="${r"#{"}${foldName}MB.MOD && ${foldName}MB.commitStatus${r" }"}"
+								oncomplete="endUpdateHead();" />
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+								id="delId" value="删除单据" type="button"
+								action="${r"#{"}${foldName}MB.deleteHead${r" }"}"
+								onclick="if(!deleteHead()){return false;}"
+								reRender="output,renderArea" oncomplete="endDeleteHead();"
+								requestDelay="50"
+								rendered="${r"#{"}${foldName}MB.DEL && ${foldName}MB.commitStatus${r" }"}" />
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'"
+								onclick="if(!app()){return false};"
+								rendered="${r"#{"}${foldName}MB.APP && ${foldName}MB.commitStatus${r" }"}"
+								styleClass="a4j_but1" value="审核单据" type="button"
+								action="${r"#{"}${foldName}MB.approveVouch${r" }"}" id="soitMBut"
+								reRender="renderArea,output"
+								oncomplete="endApp();" requestDelay="50" />
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" onclick="unApp();"
+								rendered="${r"#{"}${foldName}MB.APP && ${foldName}MB.commitStatus${r" }"}"
+								styleClass="a4j_but1" value="反审单据" type="button"
+								action="${r"#{"}${foldName}MB.upApproveVouch${r" }"}" id="unSoitMBut"
+								reRender="showHeadButton,renderArea,output,detailButton,showHead"
+								oncomplete="endUnApp();" requestDelay="50" />
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" onclick="selAllBar();"
+								styleClass="a4j_but1"
+								rendered="${r"#{"}${foldName}MB.LST && ${foldName}MB.commitStatus${r" }"}" value="查看全部条码"
+								type="button" action=""
+								reRender="showHeadButton,renderArea,output,detailButton"
+								requestDelay="50" />
+							<a4j:commandButton type="button" value="打印条码"
+								onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'"
+								action="${r"#{"}${foldName}MB.printCode${r" }"}"
+								rendered="${r"#{"}${foldName}MB.PRN && ${foldName}MB.commitStatus${r" }"}"
+								styleClass="a4j_but1" onclick="if(!print()){return false};"
+								oncomplete="lookPrint();" reRender="renderArea,outTable"
+								requestDelay="1000" />
+							<a4j:commandButton type="button" value="打印单据"
+								onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'"
+								action="${r"#{"}${foldName}MB.printReport${r" }"}"
+								rendered="${r"#{"}${foldName}MB.PRN && ${foldName}MB.commitStatus${r" }"}"
+								styleClass="a4j_but1" onclick="printReport();"
+								oncomplete="endPrintReport();"
+								reRender="renderArea,outTable,output" requestDelay="1000" />							
+							<a4j:commandButton value="关闭单据"
+								onmouseover="this.className='a4j_over1'" action=""
+								onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+								onclick="if(!doClose()){return false};" rendered="false"
+								oncomplete="endDoClose();"
+								reRender="renderArea,output,showHead,showHeadButton" />
+							<gw:GAjaxButton id="otpDBut" value="导出EXCEL" theme="b_theme"
+								onclick="reportExcel('gtable')" type="button" />
+						</a4j:outputPanel>
+					</div>
+					<div id=mmain_cnd>
+						<a4j:outputPanel id="showHead">
+							<table border="0" cellspacing="0" cellpadding="3">
+								<tr>
+									<td>
+										<h:outputText value="单据单号:"></h:outputText>
+									</td>
+									<td>
+										<h:inputText id="biid" styleClass="datetime"
+											value="${r"#{"}${foldName}MB.mbean.biid${r"}"}" disabled="true" />
+									</td>
+									<td>
+										<h:outputText value="组织架构:"></h:outputText>
+									</td>
+									<td>
+										<h:inputText id="orna" styleClass="datetime"
+											value="${r"#{"}${foldName}MB.mbean.orna${r"}"}" disabled="true"/>
+										<h:inputHidden id="orid" value="${r"#{"}${foldName}MB.mbean.orid${r"}"}"/>	
+										<img id="orid_img" style="cursor: pointer"
+												src="../../../../images/find.gif" onclick="selectOrga();" />	
+									</td>
+									<td>
+										<h:outputText value="单据状态:"></h:outputText>
+									</td>
+									<td>
+										<h:selectOneMenu id="flag" value="${r"#{"}${foldName}MB.mbean.flag${r"}"}"
+											disabled="true">
+											<f:selectItems value="${r"#{"}${foldName}MB.flags${r"}"}" />
+										</h:selectOneMenu>
+									</td>
+								</tr>
+							</table>
+						</a4j:outputPanel>
+					</div>
+					<div>
+						<a4j:outputPanel id="detailButton">
+
+							<div id="mmain_opt">
+								<a4j:commandButton id="addDButs" value="添加明細"
+									onclick="showAddDetail();"
+									onmouseover="this.className='a4j_over1'"
+									onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+									type="button" reRender="renderArea,output"
+									rendered="${r"#{"}${foldName}MB.ADD && ${foldName}MB.commitStatus${r" }"}"
+									requestDelay="50" />
+								<a4j:commandButton id="deleteDBut" value="刪除明細"
+									onmouseover="this.className='a4j_over1'"
+									onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+									type="button" action="${r"#{"}${foldName}MB.deleteDetail${r"}"}"
+									onclick="if(!delDetail(gtable)){return false};"
+									reRender="renderArea,output,countPage"
+									rendered="${r"#{"}${foldName}MB.MOD && ${foldName}MB.commitStatus${r" }"}"
+									oncomplete="endDelDetail();" requestDelay="50" />
+								<a4j:commandButton id="saveDBut" value="保存明细"
+									onmouseover="this.className='a4j_over1'"
+									rendered="${r"#{"}${foldName}MB.MOD && ${foldName}MB.commitStatus${r" }"}"
+									onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+									onclick="if(!updateDetail()){return false};" type="button"
+									action="${r"#{"}${foldName}MB.updateDetail${r"}"}"
+									reRender="renderArea,output,countPage"
+									oncomplete="endUpdateDetail();" requestDelay="50" />
+								<a4j:commandButton id="createBar" value="生成条码"
+									onmouseover="this.className='a4j_over1'"
+									onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+									onclick="if(!createBar()){return false};" type="button"
+									action="${r"#{"}${foldName}MB.createBar${r"}"}" reRender="renderArea,output"
+									oncomplete="endCreateBar();" requestDelay="50"
+									rendered="${r"#{"}${foldName}MB.MOD && ${foldName}MB.commitStatus${r" }"}" />								
+							</div>
+						</a4j:outputPanel>
+						<a4j:outputPanel id="output">
+							<g:GTable gid="gtable" gtype="grid"
+							gselectsql="SELECT a.rowid as did,<#list dtable.columns as c><#if c_has_next>a.${c.columnName},<#else>a.${c.columnName}</#if></#list> From ${dtable.tableName} a 
+								WHERE a.biid='${r"#{"}${foldName}MB.mbean.biid${r"}"}'"
+							gpage="(pagesize = 20)" gversion="2" gdebug="false"
+							gcolumn="gcid = did(headtext = selall,name = pk,width = 30,align = center,type = checkbox,headtype = checkbox);
+								gcid = 0(headtext = 行号,name = rowid,width = 31,align = center,type = text,headtype = text,datatype = string);
+								<#list dtable.columns as c>
+								<#if (c_index>0)>
+								gcid = ${c.columnName}(headtext = ${c.columnNote},name = ${c.columnName},width = 80,align = left,type = text,headtype = sort,datatype = string);
+								</#if>
+								</#list>
+							" />
+						</a4j:outputPanel>
+					</div>
+					<div style="display: none;">
+						<a4j:outputPanel id="renderArea">
+							<h:inputHidden id="msg" value="${r"#{"}${foldName}MB.msg${r"}"}" />
+							<h:inputHidden id="roids" value="${r"#{"}${foldName}MB.roids${r"}"}" />
+							<h:inputHidden id="sellist" value="${r"#{"}${foldName}MB.sellist${r"}"}" />
+							<h:inputHidden id="updatedata" value="${r"#{"}${foldName}MB.updatedata${r"}"}" />
+							<h:inputHidden id="sk_inco" value="${r"#{"}${foldName}MB.sk_inco${r"}"}" />
+
+							<a4j:commandButton id="searchBar" value="查询" type="button"
+								action="${r"#{"}${foldName}MB.searchBar${r"}"}" requestDelay="50"
+								oncomplete="showBar();" />
+
+							<a4j:commandButton id="refreshBut" value="刷新明细" type="button"
+								reRender="output" />
+
+							<a4j:commandButton onmouseover="this.className='a4j_over1'"
+								onmouseout="this.className='a4j_buton1'" styleClass="a4j_but1"
+								value="查询商品信息" type="button" action="${r"#{"}${foldName}MB.selInveBut${r"}"}"
+								id="selInveBut" onclick="if(!selInveBut()){return false};"
+								reRender="detailButton" oncomplete="endSelInveBut();"
+								requestDelay="50" />
+						</a4j:outputPanel>
+					</div>
+				</div>
+			</h:form>
+		</body>
+	</f:view>
+</html>

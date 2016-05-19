@@ -1,0 +1,138 @@
+<%@ page contentType="text/html; charset=UTF-8"%>
+<%@ include file="../../../include/include_imp.jsp" %>
+
+<html>
+	<head>
+		<title>${modunote}</title>
+		<meta http-equiv="pragma" content="no-cache">
+		<meta http-equiv="cache-control" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+		<meta http-equiv="description" content="${modunote}">
+		<link href="<%=request.getContextPath()%>/gwall/all.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="${ClassName }.js"></script>
+		<script type="text/javascript" src='<%=request.getContextPath()%>/gwall/all.js'></script>
+	</head>
+
+	<body id=mmain_body onload="clearText();">
+		<div id=mmain>
+			<f:view>
+				<h:form id="list">
+					<div id=mmain_opt>
+						<a4j:commandButton value="新增" type="button"
+							onclick="addDiv();return false;" requestDelay="50"
+							onmouseover="this.className='a4j_over'"
+							rendered="${r"#{"}${foldName}MB.ADD${r"}"}"
+							onmouseout="this.className='a4j_buton'" styleClass="a4j_but" />
+						<a4j:commandButton id="delButton" value="删除" type="button"
+							action="${r"#{"}${foldName}MB.delete${r"}"}"
+							onclick="if(!deleteAll(gtable)){return false};"
+							reRender="renderArea,out_List" oncomplete="endDo();" requestDelay="50"
+							rendered="${r"#{"}${foldName}MB.DEL${r"}"}"
+							onmouseover="this.className='a4j_over'"
+							onmouseout="this.className='a4j_buton'" styleClass="a4j_but" />	
+						<h:panelGroup id="sp" rendered="${r"#{"}${foldName}MB.LST${r"}"}">
+							<a4j:commandButton onmouseover="this.className='a4j_over'"
+								onmouseout="this.className='a4j_buton'" styleClass="a4j_but"
+								id="sid" value="查询" type="button"
+								action="${r"#{"}${foldName}MB.search${r"}"}" reRender="out_List"
+								requestDelay="50" 
+								onclick="startDo();" oncomplete="Gwin.close('progress_id');" />
+							<a4j:commandButton value="重置"
+								onmouseover="this.className='a4j_over'"
+								onmouseout="this.className='a4j_buton'" styleClass="a4j_but"
+								onclick="clearData();" />
+						</h:panelGroup>
+					</div>
+					<div id=mmain_cnd>
+						编码:
+						<h:inputText id="sk_id" value="${r"#{"}${foldName}MB.sk_id${r"}"}"
+						onkeypress="formsubmit(event);"	styleClass="inputtextedit" />
+						名称:
+						<h:inputText id="sk_na" value="${r"#{"}${foldName}MB.sk_na${r"}"}"
+						onkeypress="formsubmit(event);"	styleClass="inputtextedit" />
+					</div>
+					<a4j:outputPanel id="out_List">
+						<g:GTable gid="gtable" gtype="grid"
+							gselectsql="SELECT a.rowid as id,<#list table.columns as c><#if c_has_next>a.${c.columnName},<#else>a.${c.columnName}</#if></#list> From ${table.tableName} a
+								WHERE 1=1 ${r"#{"}${foldName}MB.searchSQL${r"}"}"
+							gpage="(pagesize = 20)" gversion="2" gdebug="false"
+							gcolumn="gcid = id(headtext = selall,name = selall,width = 30,headtype = checkbox,align = center,type = checkbox,datatype=string);
+								gcid = 0(headtext = 行号,name = rowid,width = 31,align = center,type = text,headtype = text,datatype = string);
+								gcid = -1(headtext = 操作,value=编辑,name = opt,width = 30,headtype = sort,align = center,type = link,linktype = script,typevalue = javascript:Edit('gcolumn[id]'),datatype=string);
+								<#list table.columns as c>
+								<#if (c_index>1 && c.columnName!='stat' && c.columnName!='rema' && c.columnName!='crus' && c.columnName!='edus' && c.columnName!='chus' && c.columnName!='orid')>
+								<#if (c.columnName='crdt' || c.columnName='eddt' || c.columnName='chdt')>
+								gcid = ${c.columnName}(headtext = ${c.columnNote},name = ${c.columnName},width = 120,align = left,type = text,headtype = sort,datatype=datetime,dataformat=yyyy-MM-dd HH:mm);
+								<#else>
+								gcid = ${c.columnName}(headtext = ${c.columnNote},name = ${c.columnName},width = 80,align = left,type = text,headtype = sort,datatype = string);
+								</#if>
+								</#if>
+								</#list>
+								gcid = stat(headtext = 状态,name = stat,width = 81,align = center,type = mask,typevalue=1:有效/0:注销,headtype = sort,datatype = string);
+								gcid = rema(headtext = 备注,name = rema,width = 131,align = left,type = text,headtype = sort,datatype = string);
+							" />
+					</a4j:outputPanel>
+					<a4j:outputPanel id="renderArea">
+						<h:inputHidden id="sellist" value="${r"#{"}${foldName}MB.sellist${r"}"}"></h:inputHidden>
+						<h:inputHidden id="msg" value="${r"#{"}${foldName}MB.msg${r"}"}"></h:inputHidden>
+					</a4j:outputPanel>
+				</h:form>
+
+				<div id="editSize" style="display: none">
+					<h:form id="edit">
+						<div id=mmain_hide>
+							<a4j:commandButton id="edit" value="编辑" 
+								action="${r"#{"}${foldName}MB.getSimpleBean${r"}"}"
+								reRender="out_List,msg,editarea" oncomplete="edit_show();"
+								requestDelay="50" />
+							<h:inputHidden id="selid" value="${r"#{"}${foldName}MB.selid${r"}"}"></h:inputHidden>
+							<h:inputHidden id="updateflag" value="${r"#{"}${foldName}MB.updateflag${r"}"}"></h:inputHidden>
+						</div>
+						<a4j:outputPanel id="editarea">
+							<table align="center">
+								<tr>
+									<td bgcolor="#efefef">
+										编码:
+									</td>
+									<td>
+										<h:inputText id="csid" styleClass="inputtext"
+											value="${r"#{"}${foldName}MB.bean.rema${r"}"}"/>
+									</td>
+									<td bgcolor="#efefef">
+										名称:
+									</td>
+									<td>
+										<h:inputText id="csna" styleClass="inputtext"
+											value="${r"#{"}${foldName}MB.bean.rema${r"}"}"/>
+									</td>
+								</tr>
+								<tr>
+									<td bgcolor="#efefef">
+										备注:
+									</td>
+									<td colspan="3">
+										<h:inputText id="rema" styleClass="inputtext"
+											value="${r"#{"}${foldName}MB.bean.rema${r"}"}" size="50" />
+									</td>
+								</tr>
+								<tr>
+									<td colspan="6" align="center">
+										<a4j:commandButton id="save" action="${r"#{"}${foldName}MB.save${r"}"}" value="保存"
+											reRender="out_List,renderArea"
+											onclick="if(!formCheck()){return false};"
+											oncomplete="endDo();" onmouseover="this.className='a4j_over'"
+											onmouseout="this.className='a4j_buton'" styleClass="a4j_but" />
+										<a4j:commandButton onmouseover="this.className='a4j_over'"
+											onmouseout="this.className='a4j_buton'" styleClass="a4j_but"
+											value="返回" onclick="hideDiv();" />
+									</td>
+								</tr>
+							</table>
+						</a4j:outputPanel>
+					</h:form>
+				</div>
+			</f:view>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,151 @@
+package com.temp;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import com.table.Column;
+import com.table.Table;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.Template;
+
+public class Temp extends DateBase{
+	private String datebase;    //数据库，标识是
+	private String url;
+	private String driver;
+	private String pass;
+	private String user;
+	//生成模块方法
+	public void createTemp(){
+		try {
+			func("template","D:\\temp\\");
+			func("template\\basedate","D:\\temp\\basedate\\");
+			Runtime.getRuntime().exec("cmd.exe /c start D:\\temp");
+		} catch (Exception e) {
+			System.out.println("createTemp()---->"+e.getMessage());
+		}
+	}
+	public void func(String tempPath,String path){
+		try {
+			Temp t = new Temp();
+			Configuration cfg = new Configuration();
+			cfg.setDirectoryForTemplateLoading(new File(tempPath));
+			cfg.setObjectWrapper(new DefaultObjectWrapper());
+			File f = new File(path);
+			if (f.exists()) {
+				for (File temp : f.listFiles()) {
+					temp.delete();
+				}
+			}
+			f.mkdir();
+			Map m=t.getMapDatas(getProp());
+			Temp tt=new Temp();
+			for (File temp : new File(tempPath).listFiles()) {
+				if(!temp.isFile()){
+					continue;
+				}
+				if(".svn".equals(temp.getName()))continue;
+				Template tem=cfg.getTemplate(temp.getName(),"UTF-8");
+				File ff;
+				if("${foldName}.js".equals(tem.getName()))
+					ff=tt.getFile(path,temp.getName().replace("${foldName}",m.get("foldName").toString()));
+				else
+					ff=tt.getFile(path,temp.getName().replace("${ClassName}",m.get("ClassName").toString()));
+				Writer out=new OutputStreamWriter(new FileOutputStream(ff),"UTF-8");
+				tem.process(m, out);
+				out.flush();
+			}
+		} catch (Exception e) {
+			System.out.println("createTemp()---->"+e.getMessage());
+		}
+	}
+	//将生成的模版写到指定的文件，获取文件供写
+	public File getFile(String path,String filename) throws Exception{
+		File f=new File(path+filename);
+		f.createNewFile();
+		return f;
+	}
+	//获取模版所需map信息
+	public Map<Object,Object> getMapDatas(Map<String,String> m) throws Exception{
+		datebase=m.get("url").indexOf("thin")>0?"oracle":"sqlserver";
+		Map<Object,Object> root=new HashMap<Object,Object>();
+		this.url=m.get("url");this.driver=m.get("driver");this.pass=m.get("userpass");this.user=m.get("username");
+		root.put("table", getTable(m.get("mtable")));
+		root.put("xtable", getTable(m.get("xtable")));
+		root.put("dtable", getTable(m.get("dtable")));
+		root.put("ClassName", m.get("moduname").substring(0, 1).toUpperCase()+m.get("moduname").substring(1,m.get("moduname").length()));
+		root.put("foldName", m.get("moduname"));
+		root.put("ClassNameUpper", m.get("moduname").toUpperCase());
+		root.put("path",m.get("pmoduname"));
+		root.put("modunote",m.get("modunote"));
+		root.put("pmodunote",m.get("pmodunote"));
+		return root;
+	}
+	//获取指定表的字段详细信息
+	public Table getTable(String name){
+		Table t=new Table();
+		try {
+			ResultSet rs=null;
+			ResultSet rss=null;
+			Statement dms=getConn(url, driver,user, pass).createStatement();
+			if("sqlserver".equals(datebase)){
+				name=name.toLowerCase();
+				rs=dms.executeQuery("select objname as column_name, cast(value as varchar(100)) as comments FROM ::fn_listextendedproperty (NULL, 'user', 'dbo', 'table', '"+name+"', 'column', default)");
+			}
+			else{
+				name=name.toUpperCase();
+				rs=dms.executeQuery("SELECT comments,column_name FROM user_col_comments WHERE table_name='"+name+"'");
+			}
+			DatabaseMetaData dbf=getConn(url, driver,user, pass).getMetaData();
+			rss=dbf.getColumns(null, null, name, null);
+			t.setTableName(name.toLowerCase());
+			t.setTableNameUpper(name.toUpperCase());
+			List<Column> list = new ArrayList<Column>();
+			while (rs.next()) {
+				rss.next();
+				Column c = new Column();
+				c.setColumnSize(rss.getString("COLUMN_SIZE"));
+				c.setColumnType(rss.getString("TYPE_NAME"));
+				c.setColumnNote(rs.getString("COMMENTS")==null?"":rs.getString("COMMENTS"));
+				c.setColumnName(rs.getString("COLUMN_NAME").toLowerCase());
+				c.setColumnNameLower(c.getColumnName().toLowerCase());
+				c.setColumnNameFistUpper(c.getColumnNameLower().substring(0, 1)
+						.toUpperCase()
+						+ c.getColumnNameLower().substring(1,
+								c.getColumnNameLower().length()));
+				c.setColumnNameUpper(c.getColumnName().toUpperCase());
+				list.add(c);
+			}
+			t.setColumns(list);
+		} catch (Exception e) {
+			System.out.println("getTable()----->"+e.getMessage());
+		}
+		return t;
+	}
+	//获取配置文件信息到map
+	public Map<String,String> getProp(){
+		Map<String,String> m=new HashMap<String,String>();
+		Properties p=new Properties();
+		InputStream in=TempMain.class.getResourceAsStream("conf.properties");
+		try {
+			p.load(in);
+			for (Object temp : p.keySet()) {
+				m.put((String) temp, p.getProperty((String) temp));
+			}
+			in.close();
+		} catch (Exception e) {
+			System.out.println("getProp()----->"+e.getMessage());
+		}
+		return m;
+	}
+}

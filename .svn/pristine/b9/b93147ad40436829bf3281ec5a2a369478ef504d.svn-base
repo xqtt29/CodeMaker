@@ -1,0 +1,29 @@
+package ${path}.${foldName};
+
+import com.gwall.pojo.abstracted.VouchDBean;
+
+public class ${ClassName}DBean extends VouchDBean implements java.io.Serializable{
+	//table ${dtable.tableName}
+	private String id;
+	<#list dtable.columns as c>
+	private String ${c.columnNameLower};		//${c.columnNote}
+	</#list>
+	public void setId(String id){
+		this.id=id;
+	}
+	public String getId(){
+		return id;
+	}
+	<#list dtable.columns as c>
+	public void set${c.columnNameFistUpper}(String ${c.columnNameLower}){
+		this.${c.columnNameLower}=${c.columnNameLower};
+	}
+	public String get${c.columnNameFistUpper}(){
+		return this.${c.columnNameLower};
+	}
+	</#list>
+	@Override
+	public String getTable() {
+		return "${dtable.tableName}";
+	}
+}

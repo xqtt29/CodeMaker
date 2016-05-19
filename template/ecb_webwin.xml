@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webwin-app>
+  <servlets>
+  	<servlet class="${wwPackagePath}.server.${wwPackageName}.controller.${wwClassName}RpcServiceImpl" url="/webwin/ecb/servlet/${wwClassName}RpcService" />
+  </servlets>
+</webwin-app>
+

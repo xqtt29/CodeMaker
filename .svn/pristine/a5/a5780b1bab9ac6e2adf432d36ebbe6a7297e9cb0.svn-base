@@ -1,0 +1,6 @@
+<!-- ${modunote} -->
+	<managed-bean>
+		<managed-bean-name>${foldName}MB</managed-bean-name>
+		<managed-bean-class>${path}.${foldName}.${ClassName }MB</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>

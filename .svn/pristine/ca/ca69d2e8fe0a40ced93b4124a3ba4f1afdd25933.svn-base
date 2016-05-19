@@ -1,0 +1,216 @@
+package ${path}.${foldName};
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
+import com.gwall.json.JSONObject;
+import com.gwall.core.GDatabase;
+import com.gwall.core.GenNo;
+import com.gwall.dao.impl.abstracted.GVoucherDao;
+import com.gwall.pojo.abstracted.VouchMBean;
+
+public class ${ClassName}Dao extends GVoucherDao {
+
+
+	private final String S_${table.tableName}_sql = "Select a.rowid as id,<#list table.columns as c><#if c_has_next>a.${c.columnName},<#else>a.${c.columnName}</#if></#list> From ${table.tableName} a Where a.rowid=?";
+    /**
+     * Description 获得单据信息
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-08-29
+     */
+    public String getVouch(VouchMBean vMainBean) {
+        Vector<String> v = new Vector<String>();
+		v.add(((${ClassName}MBean) vMainBean).getId());
+		String isok = "获取单据信息出错!";
+		try {
+			GDatabase db = new GDatabase();
+			db.Fill((${ClassName}MBean) vMainBean, S_${table.tableName}_sql, v);
+			isok = "ok";
+		} catch (Exception e) {
+			this.logger.error(e);
+		}
+		return isok;
+    }
+
+    /* 添加主表 */
+    public String addHead(VouchMBean vMainBean) {
+    	GDatabase db = new GDatabase();
+        String isok = "";
+        String i="";
+        try {
+        	List<String> list=new ArrayList<String>();
+            GenNo gen = new GenNo();
+            String biid;
+            biid = gen.CreateNo(${ClassName}MB.MODULE);
+            if ((biid.equals("")) || (biid == null)) {
+                isok = "添加失败,单号生成失败!";
+                return null;
+            }
+            list.add(biid);
+            list.add(getUserid());
+            list.add(getUsername());
+            i=db.exeProcedure("${r"{"}call p_${foldName}_addhead(?,?,?)${r"}"}",list);
+            if ("ok".equals(i)) {
+                isok = "添加成功";
+                ((${ClassName}MBean) vMainBean).setBiid(biid);
+            } else {
+                isok = i;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            isok = i;
+            logger.error(e);
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+
+        }
+        return isok;
+    }
+
+    /**
+     * Description: 修改主表 <br>
+     * Table: po
+     * 
+     * @param 无
+     * @return boolean
+     * @exception 无
+     * @author GL 2011-09-05
+     */
+    public String updateHead(VouchMBean vMainBean) {
+    	GDatabase db = new GDatabase();
+        String isok = "修改单据失败!";
+        String i="";
+        List<String> list=new ArrayList<String>();
+        try {
+            list.add(((${ClassName}MBean)vMainBean).getId());
+            list.add(getUserid());
+            list.add(getUsername());
+            i=db.exeProcedure("${r"{"}call p_${foldName}_updatehead(?,?,?)${r"}"}",list);
+            if ("ok".equals(i)) {
+                isok = "修改单据成功";
+            }else isok=i;
+        } catch (Exception e) {
+            logger.error(e);
+            isok=i;
+            e.printStackTrace();
+        } finally {
+            db.close();
+        }
+        return isok;
+    }
+    /**
+     * Description: 删除单据 <br>
+     * Table: po
+     * 
+     * @param 无
+     * @return boolean
+     * @exception 无
+     * @author GL 2011-09-05
+     */
+    public String deleteHead(String biids) {
+        GDatabase db = new GDatabase();
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(${ClassName}MB.MODULE);
+        list.add(biids);
+        list.add(getUserid());
+        list.add(getUsername());
+		String isok=db.exeProcedure("${r"{"}call p_${foldName}_delhead(?,?,?,?)${r"}"}", list);
+        return "ok".equals(isok)?"删除单据成功":isok;
+    }
+
+    /**
+     * Description 添加明细
+     * 
+     * @param 无
+     * @return 无
+     * @author DEW <br>
+     *         2011-09-02
+     */
+    public String addDetail(VouchMBean objMbean, String rowids) {
+		GDatabase db = new GDatabase();
+		List<String> list = new ArrayList<String>();
+		list.add(objMbean.getBiid());
+		list.add(rowids);
+		String isok = db.exeProcedure("${r"{"}call p_${foldName}_addDetail(?,?)${r"}"}", list);
+		return "ok".equals(isok)?"添加明细成功":isok;
+	}
+
+    public String updateDetail(String updatedata) {
+    	GDatabase db = new GDatabase();
+        String isok = "明细更新失败!";
+        String iret="";
+        String qty="",rowid="";
+        try {
+			JSONObject json = new JSONObject(updatedata);
+			qty=json.get("qty").toString();
+			rowid=json.get("id").toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		List<String> list=new ArrayList<String>();
+		list.add(qty.replace("[", "").replace("]", "").replace("\"", ""));
+		list.add(rowid.replace("[", "").replace("]", "").replace("\"", ""));
+		iret=db.exeProcedure("${r"{"}call p_${foldName}_updatedetail(?,?)${r"}"}",list);
+        if ("ok".equals(iret)) {
+            isok = "明细更新成功";
+        }
+        return isok;
+    }
+
+    public String deleteDetail(VouchMBean vMainBean, String dids) {
+        GDatabase db = new GDatabase();
+        ArrayList<String> list = new ArrayList<String>();
+        list.add(vMainBean.getModule());
+        list.add(((${ClassName}MBean) vMainBean).getBiid());
+        list.add(dids);
+        String isok=db.exeProcedure("${r"{"}call p_${foldName}_deldetail(?,?,?,?)${r"}"}", list);
+        return "ok".equals(isok)?"删除明细成功":isok;
+    }
+
+    /**
+     * Description: 审核单据 <br>
+     * Table: po
+     * 
+     * @param 无
+     * @return String
+     * @exception 无
+     * @author GL 2011-09-05
+     */
+    public String approveVouch(VouchMBean vMainBean) {
+
+        GDatabase db = new GDatabase();
+        List<String> list = new ArrayList<String>();
+        list.add(vMainBean.getModule());
+        list.add(((${ClassName}MBean) vMainBean).getBiid());
+        list.add(getUserid());
+        list.add(getUsername());
+        String isok=db.exeProcedure("${r"{"}call p_${foldName}_approve(?,?,?,?)${r"}"}", list);
+        return "ok".equals(isok)?"审核单据成功":isok;
+    }
+
+    /**
+     * Description: 反审单据 <br>
+     * Table: po
+     * 
+     * @param 无
+     * @return String
+     * @exception 无
+     * @author GL 2011-09-05
+     */
+    public String unApproveVouch(VouchMBean vMainBean) {
+        GDatabase db = new GDatabase();
+        List<String> list = new ArrayList<String>();
+        list.add(vMainBean.getModule());
+        list.add(((${ClassName}MBean) vMainBean).getBiid());
+        list.add(getUserid());
+        list.add(getUsername());
+        String isok=db.exeProcedure("${r"{"}call p_${foldName}_unapprove(?,?,?,?)${r"}"}", list);
+        return "ok".equals(isok)?"反审单据成功":isok;
+    }
+
+}

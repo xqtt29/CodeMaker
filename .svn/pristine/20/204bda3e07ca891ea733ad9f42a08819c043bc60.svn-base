@@ -1,0 +1,242 @@
+//重置首页查询条件
+function clearData(){
+	if($("edit:sk_start_date")!=null){
+		$("edit:sk_start_date").value = "";
+	}
+	if($("edit:sk_end_date")!=null){
+		$("edit:sk_end_date").value = "";
+	}
+	if($("edit:sk_flag")!=null){
+		$("edit:sk_flag").value = "00";
+	}
+	if($("edit:orid")!=null){
+		$("edit:orid").value = "";
+	}	
+}
+function doSearch(){
+	$("edit:sid").click();
+}
+
+//初始化添加页面
+function initAdd(){
+	<#list 0..4 as c>
+	if($("edit:${table.columns[c+1].columnName}")!=null){
+		<#if (table.columns[c+1].columnName='biid')>
+		$("edit:biid").value="自动生成";
+		<#else>
+		$("edit:${table.columns[c+1].columnName}").value="";
+		</#if>
+	}	
+	</#list>
+}
+
+//初始化Edit页面
+function initEdit(){
+}
+
+// 添加明细
+function addHead(){
+	/*<#list 0..4 as c>
+	<#if (table.columns[c+1].columnName!='biid')>
+	if($("edit:${table.columns[c+1].columnName}")==null || $("edit:${table.columns[c+1].columnName}").value.Trim().length<=0){
+		alert("${table.columns[c+1].columnNote}不能为空!");
+		$("edit:${table.columns[c+1].columnName}").focus();
+		return false;
+	}
+	</#if>
+	</#list>*/
+	Gwallwin.winShowmask("TRUE");
+	return true;
+}
+
+function addNew(){
+	window.location.href="add.jsf";
+}
+
+// 打开选择信息页面
+function showAddDetail(){
+	showModal('addDetail.jsf','680','480');
+}
+// 完成添加明细
+function endAddHead(){
+	alert($("edit:msg").value);
+	if($("edit:msg")!=null && $("edit:msg").value.Trim().indexOf("添加成功")!=-1){
+		window.location.href="edit.jsf";
+	}
+	Gwallwin.winShowmask("FALSE");
+}
+// 开始查询
+function search(){
+	Gwallwin.winShowmask("TRUE");
+	return true;
+}
+// 结束查询
+function endSearch(){
+	Gwallwin.winShowmask("FALSE");
+}
+
+//删除单据(首页)
+function deleteHeadAll(){
+	var biids = Gtable.getselcolvalues('gtable','biids');
+	if(biids.Trim().length<=0){
+		alert("请选择需要删除的单据!");
+		return false;
+	}else{
+		if(confirm("确定要删除选中单据吗?")){
+			Gwallwin.winShowmask("TRUE");
+			$("edit:sellist").value = biids;
+			return true;
+		}
+	}
+}
+
+// 结束删除单据(首页)
+function endDeleteHeadAll(){
+	if($("edit:msg").value.indexOf("删除成功")!=-1){
+		alert($("edit:msg").value);
+	}else if($("edit:msg").value.indexOf("<br>")!=-1){
+		var msgs = $("edit:msg").value.split('<br>');
+		var msg = "";
+		for(i = 0;i < msgs.length;i++){
+			msg += msgs[i] + "\n";
+		}
+		alert(msg);
+	}else{
+		alert($("edit:msg").value);
+	}
+	Gwallwin.winShowmask("FALSE");
+}
+
+// 删除当前单据
+function deleteHead(){
+	if(!confirm("确定删除当前单据吗?")){
+		return false;
+	}
+	$("edit:sellist").value = $("edit:biid").value;
+	Gwallwin.winShowmask("TRUE");
+	return true;
+}
+// 结束删除当前单据
+function endDeleteHead(){
+	Gwallwin.winShowmask("FALSE");
+	alert($("edit:msg").value);
+	if($("edit:msg").value.indexOf("删除成功")!=-1){
+		window.location.href = "list.jsf";
+	}
+}
+
+//保存单据
+function updateHead(){
+	return addHead();
+}
+//结束保存单据
+function endUpdateHead(){
+	alert($("edit:msg").value);
+	Gwallwin.winShowmask("FALSE");
+}
+
+//审核前
+function app(){
+	if(confirm("确定要审核单据吗？")){
+		Gwallwin.winShowmask("TRUE");
+		return true;
+	}else{
+		return false;
+	}
+}
+//审核后
+function endApp(){
+	alert($("edit:msg").value);
+	Gwallwin.winShowmask("FALSE");
+}
+
+//反审单据
+function unApp(){
+	Gwallwin.winShowmask("TRUE");
+}
+//结束反审
+function endUnApp(){
+	alert($("edit:msg").value);
+	Gwallwin.winShowmask("FALSE");
+}
+// 删除明细
+function delDetail(obj){
+	var dids = Gtable.getselectid(obj);
+	if(dids.length<=0){
+		alert("请选择需要删除的行!");
+		return false;
+	}else{
+		if(!confirm("确定删除选定行？")){
+			return false;
+		}else{
+			$("edit:sellist").value = dids
+			Gwallwin.winShowmask("TRUE");
+			return true;
+		}
+	}
+}
+//结束删除明细
+function endDelDetail(){
+	alert($("edit:msg").value);
+	Gwallwin.winShowmask("FALSE");
+}
+
+//修改明细
+function updateDetail(){
+	var msg = "";
+	var num = /^[1-9]\d*$/;
+	var qtys = Gtable.getcolvalues('gtable','qty');
+	var qty = qtys.split("#@#");
+	for(i=0;i<qty.length;i++){
+		if(!num.test(qty[i])){
+			msg += "第"+(i+1)+"行数量格式错误!  \n";
+		}
+	}
+	if(msg.length<=0){
+		Gwallwin.winShowmask("TRUE");
+		var updatedate = Gtable.getUpdateinfo('gtable');
+	   	$("edit:updatedata").value = updatedate;
+	   	return true;
+	}else{
+		alert(msg);
+		return false;
+	}
+}
+//结束添加明细
+function endUpdateDetail(){
+	alert($("edit:msg").value);
+	Gwallwin.winShowmask("FALSE");
+}
+
+//打开选择组织架构页面
+function selectOrga(){
+	showModal('../../../../common/orga/orga.jsf?retid=edit:orid&retname=edit:orna');
+	return false;
+}
+
+// 打开选择库位页面
+function selectWaho(){
+	showModal('../../../../common/waho/waho.jsf?type=1&retid=edit:whid&retname=edit:whna');
+	return false;
+}
+function showOutput(tableid){
+	Gwallwin.winShowmask("TRUE");
+	var curTbl = $(tableid);
+	var oXL = new ActiveXObject("Excel.Application");
+	//创建AX对象excel
+	var oWB = oXL.Workbooks.Add();
+	//获取workbook对象
+	var oSheet = oWB.ActiveSheet;
+	//激活当前sheet
+	var sel = document.body.createTextRange();
+	sel.moveToElementText(curTbl);
+	//把表格中的内容移到TextRange中
+	sel.select();
+	//全选TextRange中内容
+	sel.execCommand("Copy");
+	//复制TextRange中内容 
+	oSheet.Paste();
+	//粘贴到活动的EXCEL中
+	oXL.Visible = true;
+	//设置excel可见属性
+}
