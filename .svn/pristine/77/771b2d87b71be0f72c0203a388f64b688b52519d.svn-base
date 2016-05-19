@@ -1,9 +1,0 @@
-package com.temp;
-
-public class TempMain {
-
-	public static void main(String[] args) throws Exception {
-		Temp t=new Temp();
-		t.createTemp();								//生成模版
-	}
-}
